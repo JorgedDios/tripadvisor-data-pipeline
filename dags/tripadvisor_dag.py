@@ -1,5 +1,5 @@
 """
-DAG: tripadvisor_etl_pipeline_senior
+DAG: tripadvisor_etl_pipeline
 Fase 1: Orquestación ETL con Apache Airflow
 Autor: Jorge de Dios Orellana
 
@@ -30,20 +30,20 @@ from utils.transformaciones import separar_dlq, aplicar_window_functions, featur
 config = cargar_config()
 
 default_args = {
-    'owner': 'grupo_sdpd2',
+    'owner': 'jorge-de-dios',
     'depends_on_past': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=1),
 }
 
 @dag(
-    dag_id='tripadvisor_etl_pipeline_senior',
+    dag_id='tripadvisor_etl_pipeline',
     default_args=default_args,
     description='Pipeline ETL de 3 Fases: Extracción, Transformación y Carga (Kafka)',
     schedule=None,
     start_date=datetime(2024, 1, 1),
     catchup=False,
-    tags=['SDPD2', 'ETL', 'Senior', 'Idempotente'],
+    tags=['SDPD2', 'ETL', 'Kafka', 'Idempotente'],
 )
 def tripadvisor_pipeline():
 

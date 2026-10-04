@@ -2,7 +2,7 @@
 # Archivo de configuración centralizado para el pipeline ETL de TripAdvisor
 
 [airflow]
-owner = "sdpd2_grupo"
+owner = "jorge-de-dios"
 retries = 1
 retry_delay_minutes = 2
 
