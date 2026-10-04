@@ -7,16 +7,21 @@ retries = 1
 retry_delay_minutes = 2
 
 # -----------------------------------------------------------------------------
-# Rutas absolutas del entorno WSL (Linux)
-# Importante: Airflow necesita la ruta completa para no perderse al buscar los archivos
+# Rutas del proyecto (relativas, portables entre máquinas)
+# 'data_dir' se resuelve contra la raíz del proyecto (variable SDPD2_HOME o, por
+# defecto, la raíz del repositorio). El resto de rutas se resuelven contra 'data_dir'.
+# Cualquier ruta absoluta se respeta tal cual.
 
 [paths]
-raw_csv = "/home/jorge/proyecto_sdpd2/data/tripadvisor_european_restaurants.csv"
-# Nueva ruta para el Data Lake particionado (datos limpios)
-partitioned_dir = "/home/jorge/proyecto_sdpd2/data/processed_lake/"
-# Nueva ruta para la Dead Letter Queue (datos corruptos)
-dlq_parquet = "/home/jorge/proyecto_sdpd2/data/dlq/corrupted_records.parquet"
-watermark_file = "/home/jorge/proyecto_sdpd2/data/watermark.json" # <--- NUEVO
+data_dir = "data"
+raw_csv = "tripadvisor_european_restaurants.csv"
+# Datos validados tras la auditoría de calidad (entrada de la fase de transformación)
+clean_parquet = "cleaned_data.parquet"
+# Ruta para el Data Lake particionado (datos limpios)
+partitioned_dir = "processed_lake"
+# Ruta para la Dead Letter Queue (datos corruptos)
+dlq_parquet = "dlq/corrupted_records.parquet"
+watermark_file = "watermark.json"
 # -----------------------------------------------------------------------------
 # Configuración del clúster de Kafka (Docker local)
 

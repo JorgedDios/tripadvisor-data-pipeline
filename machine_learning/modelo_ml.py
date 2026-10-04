@@ -9,15 +9,20 @@ sobre datos particionados. Implementa ensamblaje de vectores (VectorAssembler),
 división de dataset (train/test) y evaluación métrica (RMSE/R2).
 """
 
-import os
+import sys
+from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.regression import LinearRegression
 from pyspark.ml.evaluation import RegressionEvaluator
 
+# Raíz del repositorio en el sys.path para importar utils al ejecutar el script directamente
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from utils.configuracion import cargar_config, comprobar_java_home
+
 # Configuración del entorno de ejecución
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
+comprobar_java_home()
 
 # 1. INICIALIZAR SPARK SESSION
 # Sesión configurada para el procesamiento distribuido del Data Lake
@@ -29,7 +34,7 @@ spark.sparkContext.setLogLevel("WARN")
 
 print("1. Leyendo datos desde el Data Lake particionado...")
 # Lectura de particiones de manera transparente gracias a la estructura de directorios
-ruta_data_lake = "/home/jorge/proyecto_sdpd2/data/processed_lake/*/*.parquet"
+ruta_data_lake = str(Path(cargar_config()["paths"]["partitioned_dir"]) / "*" / "*.parquet")
 df = spark.read.parquet(ruta_data_lake)
 
 # 2. LIMPIEZA Y PREPARACIÓN DEL DATASET

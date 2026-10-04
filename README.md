@@ -139,8 +139,16 @@ Configuration is kept out of the code: paths, Kafka endpoint, critical columns a
 - Python 3.11+
 - JDK 11 with `JAVA_HOME` set (required by Spark)
 
+Environment variables (documented in [`.env.example`](.env.example)):
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `JAVA_HOME` | Yes, for Spark | JDK used by the streaming and ML scripts. It is never overwritten by the code; the scripts warn if it is missing. |
+| `SDPD2_HOME` | No | Project root. Defaults to the repository root. All `[paths]` entries in `config.toml` are relative and resolved against `$SDPD2_HOME/<data_dir>` (`data/` by default). |
+| `AIRFLOW_HOME` | Yes, for Airflow | Airflow working directory (the repository root in the steps below). |
+
 ### Dataset
-Download `tripadvisor_european_restaurants.csv` from [Kaggle](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants) and set its path in `config.toml` under `[paths] raw_csv`. The file is not committed — it is ~1M rows.
+Download `tripadvisor_european_restaurants.csv` from [Kaggle](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants) and place it in `data/` (or change `[paths] raw_csv` in `config.toml`). The file is not committed — it is ~1M rows.
 
 ### 1. Environment
 ```bash

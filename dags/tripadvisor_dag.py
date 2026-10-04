@@ -9,19 +9,24 @@ Implementa idempotencia mediante Offset Watermarking.
 """
 
 import os
-import tomli
+import sys
 import polars as pl
 import pyarrow.dataset as ds
 from datetime import datetime, timedelta
+from pathlib import Path
 from airflow.decorators import dag, task
 from confluent_kafka import Producer
 import json
 
+# Airflow solo añade la carpeta dags/ al sys.path: añadimos la raíz del repositorio
+# para poder importar el paquete utils sin instalarlo
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from utils.configuracion import cargar_config
 from utils.transformaciones import separar_dlq, aplicar_window_functions, feature_engineering_avanzado
 
-CONFIG_PATH = "/home/jorge/proyecto_sdpd2/config.toml" 
-with open(CONFIG_PATH, "rb") as f:
-    config = tomli.load(f)
+# Rutas resueltas contra SDPD2_HOME (ver utils/configuracion.py)
+config = cargar_config()
 
 default_args = {
     'owner': 'grupo_sdpd2',
@@ -48,7 +53,7 @@ def tripadvisor_pipeline():
         ruta_csv = config['paths']['raw_csv']
         ruta_dlq = config['paths']['dlq_parquet']
         watermark_path = config['paths']['watermark_file']
-        ruta_clean = config['paths'].get('clean_parquet', '/home/jorge/proyecto_sdpd2/data/cleaned_data.parquet')
+        ruta_clean = config['paths']['clean_parquet']
         
         os.makedirs(os.path.dirname(ruta_clean), exist_ok=True)
         os.makedirs(os.path.dirname(ruta_dlq), exist_ok=True)

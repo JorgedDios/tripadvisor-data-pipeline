@@ -12,10 +12,15 @@ en tiempo real (Modo Complete), demostrando resiliencia y escalabilidad.
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, IntegerType
 from pyspark.sql.functions import from_json, col
-import os
+import sys
+from pathlib import Path
 
-# Configuración del entorno: Definición del motor de ejecución de Spark
-os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-11-openjdk-amd64"
+# Raíz del repositorio en el sys.path para importar utils al ejecutar el script directamente
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from utils.configuracion import comprobar_java_home
+
+# Configuración del entorno: se respeta JAVA_HOME y se avisa si no está definida
+comprobar_java_home()
 
 
 # 1. INICIALIZAR SPARK SESSION
