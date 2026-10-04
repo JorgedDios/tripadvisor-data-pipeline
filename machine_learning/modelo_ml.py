@@ -1,7 +1,7 @@
 """
 Script: modelo_ml.py
 Fase 3: Modelado Predictivo con Apache Spark MLlib.
-Autores: Jorge de Dios Orellana y Rafael Cañas
+Autor: Jorge de Dios Orellana
 
 Descripción:
 Realiza el entrenamiento y evaluación de un modelo de Regresión Lineal 

@@ -1,7 +1,7 @@
 """
 Script: consumidor_tripadvisor.py
 Fase 2: Consumo en tiempo real con Spark Structured Streaming.
-Autores: Jorge de Dios Orellana y Rafael Cañas
+Autor: Jorge de Dios Orellana
 
 Descripción:
 Establece un consumidor de Apache Kafka que deserializa mensajes JSON, 

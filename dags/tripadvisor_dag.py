@@ -1,7 +1,7 @@
 """
 DAG: tripadvisor_etl_pipeline_senior
 Fase 1: Orquestación ETL con Apache Airflow
-Autores: Jorge de Dios Orellana y Rafael Cañas
+Autor: Jorge de Dios Orellana
 
 Pipeline modular que gestiona la ingesta, validación (DLQ), 
 transformación particionada y carga en Kafka del dataset de TripAdvisor.

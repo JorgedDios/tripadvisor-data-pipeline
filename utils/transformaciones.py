@@ -3,7 +3,7 @@ Módulo: transformaciones.py
 Descripción: Conjunto de utilidades de ingeniería de datos avanzado.
 Este módulo contiene la lógica de limpieza (DLQ), cálculo de métricas 
 competitivas (Window Functions) y feature engineering para Polars.
-Autores: Jorge de Dios Orellana y Rafael Cañas
+Autor: Jorge de Dios Orellana
 """
 
 import polars as pl

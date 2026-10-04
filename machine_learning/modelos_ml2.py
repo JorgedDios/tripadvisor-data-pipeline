@@ -1,7 +1,7 @@
 """
 Script: modelos_ml2.py
 Fase 3: Modelado Predictivo Avanzado con Random Forest (Spark MLlib).
-Autores: Jorge de Dios Orellana y Rafael Cañas
+Autor: Jorge de Dios Orellana
 
 Descripción:
 Implementa un modelo de ensamble (Random Forest Regressor) para capturar 
