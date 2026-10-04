@@ -11,6 +11,7 @@ Implementa idempotencia mediante Offset Watermarking.
 import os
 import sys
 import polars as pl
+import pyarrow as pa
 import pyarrow.dataset as ds
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -131,7 +132,15 @@ def tripadvisor_pipeline():
             return
 
         print(f"Fase 3: Leyendo dataset particionado desde {input_path}...")
-        df = pl.read_parquet(f"{input_path}/**/*.parquet") # coge todos los archivos parquet sueltos, los junta y monta un solo dataframe en memoria
+        # El Data Lake se escribió con partitioning=["country"] (particionado por directorio:
+        # processed_lake/Spain/part-0.parquet). La columna 'country' ya NO está dentro de los
+        # ficheros, solo en el nombre de la carpeta. Una lectura plana con glob la pierde, así que
+        # leemos con pyarrow.dataset declarando el mismo esquema de partición para reconstruirla.
+        particionado = ds.partitioning(pa.schema([("country", pa.string())]))
+        lake = ds.dataset(input_path, format="parquet", partitioning=particionado)
+        df = pl.from_arrow(lake.to_table()) # junta todas las particiones en un solo dataframe en memoria
+        if "country" not in df.columns:
+            raise ValueError("No se ha reconstruido la columna de partición 'country' del Data Lake.")
 
         # Límite de demostración para el entorno local: un broker de Kafka de un solo nodo
         # no necesita el millón de registros para demostrar el flujo extremo a extremo.

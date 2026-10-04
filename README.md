@@ -27,8 +27,8 @@ That constraint drives every design decision in this project: the model may only
    │   extract_and_validate ──► transform_and_partition ──► load_to_kafka
    │           │                         │                       │
    │           ▼                         ▼                       │
-   │   dlq/corrupted_         processed_lake/country=ES/         │
-   │   records.parquet        (Hive-style, PyArrow)      watermark.json
+   │   dlq/corrupted_         processed_lake/Spain/              │
+   │   records.parquet        (by country, PyArrow)      watermark.json
    └──────────────────────────────┬──────────────────────────────┘
                                   │  JSON events
                     ┌─────────────▼─────────────┐
@@ -96,7 +96,7 @@ Corrupt records (missing coordinates, malformed rows) are never silently dropped
 Re-running the DAG blindly would re-inject a million rows into Kafka and corrupt every downstream consumer. The source has no update timestamps, so the pipeline persists its own checkpoint: `watermark.json` holds the index of the last row successfully published. On each run the first task reads it, computes the delta, and if the delta is zero it aborts the load with *"Carga en Kafka omitida. No hay datos nuevos"*. Same result whether it runs once or a hundred times.
 
 ### Partitioned data lake
-After preprocessing, PyArrow writes the output as a Hive-style partitioned lake (`processed_lake/country=Spain/`, `country=Italy/`, …). Downstream Spark jobs can then use partition pruning and open only the countries they need instead of scanning the continent.
+After preprocessing, PyArrow writes the output as a lake partitioned by country, one directory per value (`processed_lake/Spain/`, `processed_lake/Italy/`, …). Downstream jobs can then open only the countries they need instead of scanning the continent.
 
 ### Competitive context with window functions
 A `GROUP BY` would collapse individual restaurants. Using Polars window functions (`.over('city')`), the city average is computed in parallel and joined back onto each row, producing `rating_diff_city`. This matters: a 4.0 is a success in a town averaging 3.5 and a failure in a city averaging 4.5.
@@ -108,9 +108,13 @@ Both streaming modes are implemented deliberately, because Spark's choice is for
 
 ---
 
-## Known issue
+## Resolved issue: `country` arriving as `NULL`
 
-In the Complete-mode aggregation, `country` resolves to `NULL`. This is a direct consequence of the partitioning strategy: Hive-style partitioning lifts `country` out of the Parquet files and into the directory names. Reading the files flat for publication to Kafka drops the key from the JSON payload, and the strict `StructType` schema initialises it as null. Documented rather than patched, because the root cause sits in the Phase 1 storage layout, not in the streaming layer.
+**Symptom.** In the Complete-mode aggregation, every event was grouped under a single `NULL` country, which made the per-country count meaningless.
+
+**Root cause.** It came from the Phase 1 storage layout, not from the streaming layer. Partitioning the lake by `country` lifts that column out of the Parquet files and encodes it only in the directory names (`processed_lake/Spain/…`). The `load_to_kafka` task then read the files with a flat glob (`pl.read_parquet("…/**/*.parquet")`), which does not reconstruct the partition key, so `country` never made it into the JSON payload and the strict `StructType` schema in the consumer initialised it as null.
+
+**Fix.** `load_to_kafka` now reads the lake with `pyarrow.dataset`, declaring the same `country` partitioning used when writing it, so the column is rebuilt from the directory names before publishing. The task fails loudly if `country` is ever missing again instead of silently publishing nulls.
 
 ---
 
@@ -186,8 +190,6 @@ Outputs RMSE, R² and the feature importance ranking.
 
 - **NLP on review text** — sentiment features are the only credible route past the current R² ceiling.
 - **Streaming inference** — the trained Random Forest is saved to a model registry; the streaming job loads it with `.load()` and scores incoming venues with `.transform()`, writing predictions to PostgreSQL or back to a Kafka topic instead of the console.
-- **Fix the `country` null** by reconstructing the partition key when reading the lake for publication.
-
 ---
 
 ## Author
