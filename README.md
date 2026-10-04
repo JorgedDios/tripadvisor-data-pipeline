@@ -180,9 +180,9 @@ Spark consumes the topic, prints the per-country count per micro-batch, and writ
 
 ### 4. Phase 3 — Model training
 ```bash
-python machine_learning/modelo_ml.py
+python machine_learning/entrenar_modelos.py --modelo ambos   # or: lr | rf
 ```
-Outputs RMSE, R² and the feature importance ranking.
+Outputs RMSE and R² per model, the linear regression coefficients and the Random Forest feature importance ranking, plus a side-by-side comparison when both are trained.
 
 ---
 
