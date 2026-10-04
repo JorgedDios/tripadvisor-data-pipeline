@@ -165,7 +165,7 @@ docker-compose up -d
 export AIRFLOW_HOME=$(pwd)
 airflow standalone
 ```
-Open `http://localhost:8080`, log in with the credentials printed in the terminal, enable the `tripadvisor_etl_pipeline` DAG and trigger it. It builds the data lake and starts publishing JSON events to the `tripadvisor_restaurants` topic.
+Open `http://localhost:8080`, log in with the credentials printed in the terminal, enable the `tripadvisor_etl_pipeline` DAG and trigger it. It builds the data lake and starts publishing JSON events to the `tripadvisor_restaurants` topic. By default each run publishes at most 5,000 records (`[kafka] max_records_per_run` in `config.toml`), a demo limit for a single-node local broker; raise it, or set it to `0`, to publish the full dataset.
 
 ### 3. Phase 2 — Streaming consumer
 In a second terminal, with the venv active and Kafka running:

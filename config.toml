@@ -29,6 +29,10 @@ watermark_file = "watermark.json"
 bootstrap_servers = "localhost:9092"
 topic_name = "tripadvisor_restaurants"
 acks = "all"
+# Límite de demostración: registros publicados por ejecución del DAG.
+# Un broker local de un solo nodo no necesita el millón de filas para demostrar
+# el flujo. Súbelo, o pon 0 para publicar el dataset completo.
+max_records_per_run = 5000
 
 # -----------------------------------------------------------------------------
 # Parámetros para la limpieza y Feature Engineering

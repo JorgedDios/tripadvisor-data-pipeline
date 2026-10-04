@@ -132,8 +132,14 @@ def tripadvisor_pipeline():
 
         print(f"Fase 3: Leyendo dataset particionado desde {input_path}...")
         df = pl.read_parquet(f"{input_path}/**/*.parquet") # coge todos los archivos parquet sueltos, los junta y monta un solo dataframe en memoria
-        df_safe = df.head(5000) 
-        
+
+        # Límite de demostración para el entorno local: un broker de Kafka de un solo nodo
+        # no necesita el millón de registros para demostrar el flujo extremo a extremo.
+        # Basta con subir 'max_records_per_run' en config.toml, o ponerlo a 0, para
+        # publicar el dataset completo.
+        max_records = config['kafka'].get('max_records_per_run', 0)
+        df_safe = df.head(max_records) if max_records else df
+
         kafka_config = {
             'bootstrap.servers': config['kafka']['bootstrap_servers'],
             'acks': config['kafka']['acks'],
