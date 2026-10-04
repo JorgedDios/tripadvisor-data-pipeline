@@ -93,7 +93,7 @@ The raw dataset includes fields collected *after* a restaurant is operating: cou
 Corrupt records (missing coordinates, malformed rows) are never silently dropped — that destroys the traceability of the error. The DAG intercepts them and routes them to `dlq/corrupted_records.parquet`. The main flow never collapses on an unexpected exception, and the rejected rows stay available to monitor, alert on, or fix at source.
 
 ### Idempotency via offset watermarking
-Re-running the DAG blindly would re-inject a million rows into Kafka and corrupt every downstream consumer. The source has no update timestamps, so the pipeline persists its own checkpoint: `watermark.json` holds the index of the last row successfully published. On each run the first task reads it, computes the delta, and if the delta is zero it aborts the load with *"Carga en Kafka omitida. No hay datos nuevos"*. Same result whether it runs once or a hundred times.
+Re-running the DAG blindly would re-inject a million rows into Kafka and corrupt every downstream consumer. The source has no update timestamps, so the pipeline persists its own checkpoint: `watermark.json` holds the index of the last row successfully published. On each run the first task reads it, computes the delta, and if the delta is zero it aborts the load with *"Carga en Kafka omitida. No hubo datos nuevos"*. Same result whether it runs once or a hundred times.
 
 ### Partitioned data lake
 After preprocessing, PyArrow writes the output as a lake partitioned by country, one directory per value (`processed_lake/Spain/`, `processed_lake/Italy/`, …). Downstream jobs can then open only the countries they need instead of scanning the continent.
@@ -160,7 +160,7 @@ git clone https://github.com/JorgedDios/tripadvisor-data-pipeline.git
 cd tripadvisor-data-pipeline
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install apache-airflow polars pyarrow pyspark==3.5.0
+pip install apache-airflow polars pyarrow confluent-kafka tomli pyspark==3.5.0
 ```
 
 ### 2. Phase 1 — Kafka and the ETL DAG
