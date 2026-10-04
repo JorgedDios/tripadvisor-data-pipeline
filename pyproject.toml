@@ -5,16 +5,21 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sdpd2_tripadvisor_etl"
 version = "1.0.0"
-description = "Pipeline ETL de TripAdvisor con Apache Airflow y Kafka"
+description = "Pipeline Big Data end-to-end sobre restaurantes europeos de TripAdvisor: ETL orquestado con Apache Airflow y Polars, ingesta en Kafka, consumo con Spark Structured Streaming y modelado con Spark MLlib"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
+authors = [
+    { name = "Jorge de Dios Orellana" }
+]
 
 # Aquí definimos las librerías exactas que necesita nuestro proyecto
 dependencies = [
     "apache-airflow==2.9.0",
     "polars>=0.20.0",
+    "pyarrow>=10.0.0",
     "confluent-kafka>=2.3.0",
     "tomli>=2.0.1",
+    "pyspark==3.5.0",
     "jupyter" # Para hacer el Análisis Exploratorio (EDA) después
 ]
 
