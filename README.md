@@ -54,7 +54,7 @@ That constraint drives every design decision in this project: the model may only
 
 ## Results
 
-Trained on **779,745 validated records**, 80/20 train/test split with a fixed seed for reproducibility.
+Trained on **779,745 validated records**, 80/20 train/test split with a fixed seed for reproducibility. The metrics below come from the original run over the full dataset.
 
 | Model (Spark MLlib) | RMSE | R² |
 |---|---|---|

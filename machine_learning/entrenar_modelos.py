@@ -129,8 +129,10 @@ def entrenar_regresion_lineal(train_data, test_data) -> dict:
 def entrenar_random_forest(train_data, test_data) -> dict:
     """Entrena el Random Forest y lo interpreta mediante 'Feature Importances'."""
     print("\n2. Entrenando el modelo de Random Forest...")
-    # Configuración: 50 árboles para estabilidad, profundidad 5 para evitar overfitting
-    rf = RandomForestRegressor(featuresCol="features", labelCol="label", numTrees=50, maxDepth=5)
+    # Configuración: 50 árboles para estabilidad, profundidad 5 para evitar overfitting.
+    # Semilla fija: sin ella PySpark la deriva del hash del nombre de la clase, que cambia
+    # entre procesos de Python, y el bosque (y su RMSE) variaría de una ejecución a otra.
+    rf = RandomForestRegressor(featuresCol="features", labelCol="label", numTrees=50, maxDepth=5, seed=42)
     modelo_rf = rf.fit(train_data)
 
     metricas = evaluar(modelo_rf, test_data, "RESULTADOS DEL RANDOM FOREST")
