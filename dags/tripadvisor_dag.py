@@ -191,11 +191,18 @@ def tripadvisor_pipeline():
 
         # Producción de mensajes en formato JSON
         for record in records:
-            producer.produce( # enviamos el paquete a kafka
-                topic=config['kafka']['topic_name'], 
-                value=json.dumps(record).encode('utf-8'), # json.dumps = convertir el diccionario a texto json para luego aplastarlo a bytes en UTF-8
-                callback=lambda err, msg: errores.append(err) if err is not None else None # anotamos los envíos fallidos
-            )
+            while True:
+                try:
+                    producer.produce( # enviamos el paquete a kafka
+                        topic=config['kafka']['topic_name'],
+                        value=json.dumps(record).encode('utf-8'), # json.dumps = convertir el diccionario a texto json para luego aplastarlo a bytes en UTF-8
+                        callback=lambda err, msg: errores.append(err) if err is not None else None # anotamos los envíos fallidos
+                    )
+                    break
+                except BufferError:
+                    # Cola local del productor llena (100.000 mensajes por defecto; sin tope se envía el
+                    # dataset completo): esperamos a que Kafka confirme entregas pendientes y reintentamos
+                    producer.poll(1)
             count += 1
             producer.poll(0)
 
