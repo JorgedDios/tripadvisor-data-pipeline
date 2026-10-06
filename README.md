@@ -163,8 +163,9 @@ git clone https://github.com/JorgedDios/tripadvisor-data-pipeline.git
 cd tripadvisor-data-pipeline
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install apache-airflow polars pyarrow confluent-kafka tomli pyspark==3.5.0
+pip install apache-airflow polars pyarrow confluent-kafka tomli pyspark==3.5.0 "setuptools>=60"
 ```
+`setuptools` is needed on Python 3.12+: PySpark 3.5.0 still imports `distutils`, which 3.12 removed, and setuptools provides it again.
 
 ### 2. Phase 1 — Kafka and the ETL DAG
 ```bash

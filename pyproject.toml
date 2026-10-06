@@ -20,6 +20,9 @@ dependencies = [
     "confluent-kafka>=2.3.0",
     "tomli>=2.0.1",
     "pyspark==3.5.0",
+    # pyspark 3.5.0 importa distutils (pyspark.ml), que Python 3.12 ya no incluye;
+    # setuptools >= 60 lo vuelve a proporcionar
+    "setuptools>=60",
     "jupyter" # Para hacer el Análisis Exploratorio (EDA) después
 ]
 
