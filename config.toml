@@ -19,8 +19,8 @@ raw_csv = "tripadvisor_european_restaurants.csv"
 clean_parquet = "cleaned_data.parquet"
 # Ruta para el Data Lake particionado (datos limpios)
 partitioned_dir = "processed_lake"
-# Ruta para la Dead Letter Queue (datos corruptos)
-dlq_parquet = "dlq/corrupted_records.parquet"
+# Directorio de la Dead Letter Queue (datos corruptos): un fichero por lote, lote-<fila de inicio>.parquet
+dlq_dir = "dlq"
 watermark_file = "watermark.json"
 # -----------------------------------------------------------------------------
 # Configuración del clúster de Kafka (Docker local)

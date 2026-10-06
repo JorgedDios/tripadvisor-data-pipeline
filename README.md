@@ -27,8 +27,8 @@ That constraint drives every design decision in this project: the model may only
    │   extract_and_validate ──► transform_and_partition ──► load_to_kafka
    │           │                         │                       │
    │           ▼                         ▼                       │
-   │   dlq/corrupted_         processed_lake/Spain/              │
-   │   records.parquet        (by country, PyArrow)      watermark.json
+   │   dlq/lote-*.parquet     processed_lake/Spain/              │
+   │   (one file per batch)   (by country, PyArrow)      watermark.json
    └──────────────────────────────┬──────────────────────────────┘
                                   │  JSON events
                     ┌─────────────▼─────────────┐
@@ -90,7 +90,7 @@ The diagnosis is not a modelling failure, it is a feature-space limit. The model
 The raw dataset includes fields collected *after* a restaurant is operating: counts of "excellent"/"terrible" votes, and sub-scores for service and atmosphere. Using them to predict the overall rating would be circular — and a brand-new restaurant would never have them. All of them were dropped. The model only sees attributes that exist at planning time.
 
 ### Dead Letter Queue
-Corrupt records (missing coordinates, malformed rows) are never silently dropped — that destroys the traceability of the error. The DAG intercepts them and routes them to `dlq/corrupted_records.parquet`. The main flow never collapses on an unexpected exception, and the rejected rows stay available to monitor, alert on, or fix at source.
+Corrupt records (missing coordinates, malformed rows) are never silently dropped — that destroys the traceability of the error. The DAG intercepts them and routes them to the `dlq/` directory, one Parquet file per batch named after the batch's first source row (`dlq/lote-0000005000.parquet`), the same convention as the data lake. The DLQ therefore accumulates every corrupt record detected since the first run, and a batch retried after a failure always starts at the same row, so it overwrites its own file instead of duplicating its rows. Read the whole queue with `pl.read_parquet("data/dlq/*.parquet")`. The main flow never collapses on an unexpected exception, and the rejected rows stay available to monitor, alert on, or fix at source.
 
 ### Idempotency via offset watermarking
 Re-running the DAG blindly would re-inject a million rows into Kafka and corrupt every downstream consumer. The source has no update timestamps, so the pipeline persists its own checkpoint: `watermark.json` holds the number of source CSV rows already consumed — rows published to Kafka plus rows diverted to the DLQ, which count as processed and are never retried — which is also the 0-based index of the next row to read. On each run the first task reads it and takes the next slice of the CSV, `[watermark, watermark + max_records_per_run)` (or everything left if the cap is `0`); the DLQ split, transformation and publishing all operate on exactly that slice. The watermark only moves forward, to the end of the slice, after Kafka has acknowledged every message of the batch; if any delivery fails the task errors out and the next run retries the same slice. If there are no new rows, the load is skipped with *"Carga en Kafka omitida. No hubo datos nuevos"*. Consecutive runs therefore walk through the file without gaps or overlaps, and the DAG allows only one active run so two runs can never read the same watermark. The guarantee is at-least-once rather than strict exactly-once: a run that fails *after* some messages were delivered will republish its slice on the next run.
@@ -155,7 +155,7 @@ Environment variables (documented in [`.env.example`](.env.example)):
 Download `tripadvisor_european_restaurants.csv` from [Kaggle](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants) and place it in `data/` (or change `[paths] raw_csv` in `config.toml`). The file is not committed — it is ~1M rows.
 
 ### Upgrading from an earlier version
-Before the first run with this version, delete `data/processed_lake/` and `data/watermark.json`. A lake built by the previous code holds `part-0.parquet` files; mixed with the new per-batch `lote-*.parquet` files, `entrenar_modelos.py` (which reads every Parquet file in the lake) would count those rows twice. The first run then rebuilds the lake from row 0.
+Before the first run with this version, delete `data/processed_lake/`, `data/watermark.json` and the old `data/dlq/corrupted_records.parquet`. A lake built by the previous code holds `part-0.parquet` files; mixed with the new per-batch `lote-*.parquet` files, `entrenar_modelos.py` (which reads every Parquet file in the lake) would count those rows twice. Likewise, the old single-file DLQ would sit next to the new per-batch files in `dlq/` and its rows would be detected and stored again. The first run then rebuilds the lake from row 0.
 
 ### 1. Environment
 ```bash

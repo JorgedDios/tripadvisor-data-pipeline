@@ -56,12 +56,12 @@ def tripadvisor_pipeline():
         """TAREA 1 (EXTRACT): Lee datos, aplica Watermark y audita nulos (DLQ)."""
         print("Fase 1: Extracción y Validación (DLQ) con Watermarking...")
         ruta_csv = config['paths']['raw_csv']
-        ruta_dlq = config['paths']['dlq_parquet']
+        ruta_dlq = config['paths']['dlq_dir']
         watermark_path = config['paths']['watermark_file']
         ruta_clean = config['paths']['clean_parquet']
-        
+
         os.makedirs(os.path.dirname(ruta_clean), exist_ok=True)
-        os.makedirs(os.path.dirname(ruta_dlq), exist_ok=True)
+        os.makedirs(ruta_dlq, exist_ok=True)
 
         # Control de idempotencia (Watermarking)
         last_row = 0
@@ -95,9 +95,19 @@ def tripadvisor_pipeline():
         # Auditoría de calidad y segregación DLQ
         df_good, df_bad = separar_dlq(df_incremental, config['processing']['critical_columns'])
         
+        # Un fichero por lote (lote-<fila de inicio>.parquet), con el mismo criterio que el Data Lake:
+        # la DLQ acumula los registros corruptos de todas las ejecuciones, y un lote reintentado
+        # (siempre empieza en la misma fila, la del watermark) sobrescribe su propio fichero en vez
+        # de duplicar sus filas. Si el reintento ya no tiene filas corruptas (p. ej. porque cambió
+        # el tope y el lote es más corto), se borra el fichero del intento anterior: esas filas
+        # se volverán a evaluar, y a escribir, en el lote que las contenga.
+        ruta_dlq_lote = os.path.join(ruta_dlq, f"lote-{inicio:010d}.parquet")
         if df_bad.height > 0:
-            df_bad.write_parquet(ruta_dlq)
-            
+            df_bad.write_parquet(ruta_dlq_lote)
+            print(f"{df_bad.height} registros corruptos desviados a {ruta_dlq_lote}.")
+        elif os.path.exists(ruta_dlq_lote):
+            os.remove(ruta_dlq_lote)
+
         df_good.write_parquet(ruta_clean)
 
         # El watermark NO se actualiza aquí: las filas aún no han llegado a Kafka.
