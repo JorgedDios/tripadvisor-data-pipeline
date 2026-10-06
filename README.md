@@ -132,7 +132,7 @@ Both streaming modes are implemented deliberately, because Spark's choice is for
 └── pyproject.toml
 ```
 
-Configuration is kept out of the code: paths, Kafka endpoint, critical columns and numeric columns all live in `config.toml`.
+Configuration is kept out of the code: paths, Kafka endpoint and topic, streaming output directories, critical columns and numeric columns all live in `config.toml`, and every script reads it through `utils/configuracion.py`.
 
 ---
 

@@ -37,6 +37,15 @@ acks = "all"
 max_records_per_run = 5000
 
 # -----------------------------------------------------------------------------
+# Consumidor de Spark Structured Streaming (lee broker y topic de la sección [kafka])
+
+[streaming]
+# Salida CSV de la consulta 1 (sin gluten y nota >= 4.5) y su checkpoint.
+# Rutas relativas a la raíz del proyecto (SDPD2_HOME); una ruta absoluta se respeta tal cual.
+consulta1_output_dir = "salida1_txt"
+consulta1_checkpoint_dir = "checkpoints/consulta1"
+
+# -----------------------------------------------------------------------------
 # Parámetros para la limpieza y Feature Engineering
 
 [processing]

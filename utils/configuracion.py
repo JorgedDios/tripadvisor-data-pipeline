@@ -24,10 +24,11 @@ CONFIG_PATH = PROJECT_ROOT / "config.toml"
 
 def cargar_config() -> dict:
     """
-    Lee config.toml y resuelve las rutas de la sección [paths].
+    Lee config.toml y resuelve las rutas de las secciones [paths] y [streaming].
 
-    'data_dir' se resuelve contra PROJECT_ROOT y el resto de rutas contra
-    'data_dir'. Si alguna ruta ya es absoluta se respeta tal cual.
+    'data_dir' se resuelve contra PROJECT_ROOT y el resto de rutas de [paths]
+    contra 'data_dir'. Las rutas de [streaming] (claves terminadas en '_dir') se
+    resuelven contra PROJECT_ROOT. Si alguna ruta ya es absoluta se respeta tal cual.
     """
     with open(CONFIG_PATH, "rb") as f:
         config = tomli.load(f)
@@ -38,6 +39,11 @@ def cargar_config() -> dict:
     for clave, valor in paths.items():
         if clave != "data_dir":
             paths[clave] = str(data_dir / valor)
+
+    streaming = config.get("streaming", {})
+    for clave, valor in streaming.items():
+        if clave.endswith("_dir"):
+            streaming[clave] = str(PROJECT_ROOT / valor)
 
     return config
 

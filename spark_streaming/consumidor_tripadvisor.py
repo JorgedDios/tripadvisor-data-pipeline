@@ -17,10 +17,17 @@ from pathlib import Path
 
 # Raíz del repositorio en el sys.path para importar utils al ejecutar el script directamente
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from utils.configuracion import comprobar_java_home
+from utils.configuracion import cargar_config, comprobar_java_home
 
 # Configuración del entorno: se respeta JAVA_HOME y se avisa si no está definida
 comprobar_java_home()
+
+# Broker, topic y rutas de salida centralizados en config.toml (ver utils/configuracion.py)
+config = cargar_config()
+KAFKA_BOOTSTRAP = config['kafka']['bootstrap_servers']
+KAFKA_TOPIC = config['kafka']['topic_name']
+RUTA_SALIDA_CONSULTA1 = config['streaming']['consulta1_output_dir']
+RUTA_CHECKPOINT_CONSULTA1 = config['streaming']['consulta1_checkpoint_dir']
 
 
 # 1. INICIALIZAR SPARK SESSION
@@ -53,15 +60,15 @@ tripadvisor_schema = StructType([
     StructField("is_gluten_free", IntegerType(), True)
 ])
 
-print("Iniciando la conexión con Kafka en localhost:9092...")
+print(f"Iniciando la conexión con Kafka en {KAFKA_BOOTSTRAP} (topic '{KAFKA_TOPIC}')...")
 
 
 # 3. LEER EL FLUJO DESDE KAFKA (FASE DE INGESTA)
 
 kafka_df = spark.readStream \
     .format("kafka") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("subscribe", "tripadvisor_restaurants") \
+    .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP) \
+    .option("subscribe", KAFKA_TOPIC) \
     .option("startingOffsets", "earliest") \
     .load()
 
@@ -91,8 +98,8 @@ consulta1_df = parsed_df.filter((col("is_gluten_free") == 1) & (col("avg_rating"
 query1 = consulta1_df.writeStream \
     .outputMode("append") \
     .format("csv") \
-    .option("path", "./salida1_txt") \
-    .option("checkpointLocation", "./checkpoints/consulta1") \
+    .option("path", RUTA_SALIDA_CONSULTA1) \
+    .option("checkpointLocation", RUTA_CHECKPOINT_CONSULTA1) \
     .start()
 
 # ---> CONSULTA 2: Agregación analítica por país (Modo Complete) por consola
