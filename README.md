@@ -154,6 +154,9 @@ Environment variables (documented in [`.env.example`](.env.example)):
 ### Dataset
 Download `tripadvisor_european_restaurants.csv` from [Kaggle](https://www.kaggle.com/datasets/stefanoleone992/tripadvisor-european-restaurants) and place it in `data/` (or change `[paths] raw_csv` in `config.toml`). The file is not committed — it is ~1M rows.
 
+### Upgrading from an earlier version
+Before the first run with this version, delete `data/processed_lake/` and `data/watermark.json`. A lake built by the previous code holds `part-0.parquet` files; mixed with the new per-batch `lote-*.parquet` files, `entrenar_modelos.py` (which reads every Parquet file in the lake) would count those rows twice. The first run then rebuilds the lake from row 0.
+
 ### 1. Environment
 ```bash
 git clone https://github.com/JorgedDios/tripadvisor-data-pipeline.git
