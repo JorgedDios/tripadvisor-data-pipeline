@@ -78,13 +78,13 @@ def tripadvisor_pipeline():
             print(f"No hay datos nuevos. El Watermark está en la fila {last_row}.")
             return {"estado": "NO_DATA"}
 
-        # Límite de demostración para el entorno local: un broker de Kafka de un solo nodo
-        # no necesita el millón de registros para demostrar el flujo extremo a extremo.
+        # Límite opcional de demostración para el entorno local (por defecto 0 = sin tope):
+        # un broker de Kafka de un solo nodo no necesita el millón de registros para demostrar
+        # el flujo extremo a extremo. Con tope, las window functions se calculan por lote.
         # El tope se aplica aquí, sobre las filas del origen, y no al publicar: así el lote
         # que recorre el pipeline es exactamente el tramo [inicio, fin) del CSV y el watermark
         # puede avanzar hasta 'fin' sin dejar filas leídas y nunca publicadas.
-        # Basta con subir 'max_records_per_run' en config.toml, o ponerlo a 0, para
-        # procesar el dataset completo en una sola ejecución.
+        # Con 'max_records_per_run' = 0 en config.toml se procesa el dataset completo en una sola ejecución.
         max_records = config['kafka'].get('max_records_per_run', 0)
         tamano_lote = min(nuevas_filas, max_records) if max_records else nuevas_filas
         inicio, fin = last_row, last_row + tamano_lote

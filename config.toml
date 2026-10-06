@@ -29,12 +29,14 @@ watermark_file = "watermark.json"
 bootstrap_servers = "localhost:9092"
 topic_name = "tripadvisor_restaurants"
 acks = "all"
-# Límite de demostración: filas del CSV de origen que procesa cada ejecución del DAG.
-# Las válidas se publican en Kafka y las corruptas van a la DLQ, así que se publican
-# como mucho este número de registros; la siguiente ejecución continúa donde lo dejó
-# la anterior (watermark). Un broker local de un solo nodo no necesita el millón de
-# filas para demostrar el flujo. Súbelo, o pon 0 para procesar el dataset completo.
-max_records_per_run = 5000
+# Filas del CSV de origen que procesa cada ejecución del DAG. 0 = sin tope: se procesa
+# todo lo pendiente en una sola ejecución (valor por defecto y comportamiento correcto).
+# Un valor > 0 es un límite opcional para demos con un broker local: las filas válidas
+# se publican en Kafka, las corruptas van a la DLQ, y la siguiente ejecución continúa
+# donde lo dejó la anterior (watermark). Consecuencia: las window functions se calculan
+# sobre cada lote, así que city_avg_rating (y rating_diff_city) dejan de ser la media de
+# la ciudad en el dataset completo, y esa es la segunda variable más importante del modelo.
+max_records_per_run = 0
 
 # -----------------------------------------------------------------------------
 # Consumidor de Spark Structured Streaming (lee broker y topic de la sección [kafka])

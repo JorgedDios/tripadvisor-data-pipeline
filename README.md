@@ -169,7 +169,7 @@ docker-compose up -d
 export AIRFLOW_HOME=$(pwd)
 airflow standalone
 ```
-Open `http://localhost:8080`, log in with the credentials printed in the terminal, enable the `tripadvisor_etl_pipeline` DAG and trigger it. It builds the data lake and starts publishing JSON events to the `tripadvisor_restaurants` topic. By default each run processes the next 5,000 rows of the CSV (`[kafka] max_records_per_run` in `config.toml`), so it publishes at most 5,000 records; this is a demo limit for a single-node local broker. Trigger the DAG again to continue from where the previous run stopped, or raise the cap (or set it to `0`) to process the full dataset in one run.
+Open `http://localhost:8080`, log in with the credentials printed in the terminal, enable the `tripadvisor_etl_pipeline` DAG and trigger it. It builds the data lake and starts publishing JSON events to the `tripadvisor_restaurants` topic. By default a run processes every pending row of the CSV (`[kafka] max_records_per_run = 0` in `config.toml`). For a quick demo on a single-node local broker you can set a cap, e.g. `5000`: each run then processes the next 5,000 rows, so it publishes at most 5,000 records, and triggering the DAG again continues from where the previous run stopped. Keep the cap for demos only: the window functions run per batch, so with a cap `city_avg_rating` (and `rating_diff_city`) is the city average within each slice rather than over the full dataset, and that is the model's second most important feature (~25% of the Random Forest importance).
 
 ### 3. Phase 2 — Streaming consumer
 In a second terminal, with the venv active and Kafka running:
