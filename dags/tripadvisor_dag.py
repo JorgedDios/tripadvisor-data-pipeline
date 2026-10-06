@@ -126,6 +126,14 @@ def tripadvisor_pipeline():
         ruta_partitioned = config['paths']['partitioned_dir']
         os.makedirs(ruta_partitioned, exist_ok=True)
 
+        # Mismo criterio que la DLQ: antes de escribir, se borran los ficheros que este mismo lote
+        # (misma fila de inicio) dejó en un intento previo, en TODAS las particiones. Si el reintento
+        # usa otro tope, puede no incluir algún país del intento fallido, y sus ficheros quedarían
+        # huérfanos: no se publicarían, pero entrenar_modelos.py los leería.
+        for huerfano in Path(ruta_partitioned).glob(f"*/lote-{lote['inicio']:010d}-*.parquet"):
+            huerfano.unlink()
+            print(f"Eliminado fichero de un intento previo del lote: {huerfano}")
+
         df_good = pl.read_parquet(input_path)
         if df_good.height == 0:
             # Todo el lote fue a la DLQ: no hay nada que escribir, pero la carga
@@ -148,7 +156,7 @@ def tripadvisor_pipeline():
         table_final = df_final.to_arrow() # lo pasamos al formato de memoria pyarrow
         # Cada lote escribe ficheros con nombre propio (lote-<fila de inicio>-N.parquet), de modo que
         # el Data Lake acumula los lotes en lugar de pisar el part-0.parquet de cada país, y repetir
-        # el mismo lote tras un fallo sobrescribe sus propios ficheros en vez de duplicarlos.
+        # el mismo lote tras un fallo reemplaza sus propios ficheros (ver la limpieza de arriba) en vez de duplicarlos.
         # file_visitor registra los ficheros escritos para que la carga publique solo este lote.
         ficheros = []
         ds.write_dataset(
