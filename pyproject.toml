@@ -7,7 +7,7 @@ name = "sdpd2_tripadvisor_etl"
 version = "1.0.0"
 description = "Pipeline Big Data end-to-end sobre restaurantes europeos de TripAdvisor: ETL orquestado con Apache Airflow y Polars, ingesta en Kafka, consumo con Spark Structured Streaming y modelado con Spark MLlib"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 authors = [
     { name = "Jorge de Dios Orellana" }
 ]

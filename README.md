@@ -140,7 +140,7 @@ Configuration is kept out of the code: paths, Kafka endpoint and topic, streamin
 
 ### Prerequisites
 - Docker and Docker Compose
-- Python 3.11+
+- Python 3.11 or 3.12 (`apache-airflow==2.9.0` does not support 3.13)
 - JDK 11 with `JAVA_HOME` set (required by Spark)
 
 Environment variables (documented in [`.env.example`](.env.example)):
@@ -165,7 +165,7 @@ python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install apache-airflow polars pyarrow confluent-kafka tomli pyspark==3.5.0 "setuptools>=60"
 ```
-`setuptools` is needed on Python 3.12+: PySpark 3.5.0 still imports `distutils`, which 3.12 removed, and setuptools provides it again.
+`setuptools` is needed on Python 3.12: PySpark 3.5.0 still imports `distutils`, which 3.12 removed, and setuptools provides it again.
 
 ### 2. Phase 1 — Kafka and the ETL DAG
 ```bash
